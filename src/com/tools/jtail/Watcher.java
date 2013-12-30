@@ -33,13 +33,14 @@ import java.util.logging.Logger;
 
 /**
  * Watches for changes on the file that needs to be tailed.
+ *
  * @author maartenl
  */
 public class Watcher
 {
 
-    private Logger logger = Logger.getLogger(Watcher.class.getName());
-    
+    private static final Logger logger = Logger.getLogger(Watcher.class.getName());
+
     private static long position = 0;
 
     private static long size = 0;
@@ -52,6 +53,7 @@ public class Watcher
 
     public void watch(String filename) throws IOException
     {
+        logger.entering(Watcher.class.getName(), "watch");
         try (WatchService watcher = FileSystems.getDefault().newWatchService())
         {
             Path file = FileSystems.getDefault().getPath(filename);
@@ -84,11 +86,12 @@ public class Watcher
             }
             key.cancel();
         }
+        logger.exiting(Watcher.class.getName(), "watch");
     }
 
     private void processEvent(WatchEvent<?> event, Path file) throws IOException
     {
-        logger.entering(Jtail.class.getName(), "processEvent");
+        logger.entering(Watcher.class.getName(), "processEvent");
         WatchEvent.Kind kind = event.kind();
         // TBD - provide example of how OVERFLOW event is handled
         if (kind == OVERFLOW)
@@ -111,12 +114,12 @@ public class Watcher
             // kind == ENTRY_MODIFY
             tailFile(context);
         }
-        logger.exiting(Jtail.class.getName(), "processEvent");
+        logger.exiting(Watcher.class.getName(), "processEvent");
     }
 
     private void tailFile(Path file) throws IOException
     {
-        logger.entering(Jtail.class.getName(), "tailFile");
+        logger.entering(Watcher.class.getName(), "tailFile");
         byte[] buffer = new byte[1024];
         size = file.toFile().length();
         if (position > size)
@@ -135,7 +138,7 @@ public class Watcher
             position = reader.getFilePointer();
         }
         size = position;
-        logger.exiting(Jtail.class.getName(), "tailFile");
+        logger.exiting(Watcher.class.getName(), "tailFile");
     }
 
 }

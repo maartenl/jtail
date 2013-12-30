@@ -17,8 +17,6 @@
 package com.tools.jtail;
 
 import java.io.IOException;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -31,26 +29,7 @@ import java.util.logging.Logger;
 public class Jtail
 {
 
-    private static Logger logger;
-
-    public static void initializeLogging()
-    {
-        // Level.NONE or Level.ALL
-        final Level logLevel = Level.ALL;
-
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setLevel(logLevel);
-
-        // Logger settings.
-        LogManager.getLogManager().getLogger(Logger.GLOBAL_LOGGER_NAME).setLevel(logLevel);
-        LogManager.getLogManager().getLogger(Logger.GLOBAL_LOGGER_NAME).addHandler(handler);
-
-        logger = Logger.getLogger(Jtail.class.getName());
-        //logger.addHandler(handler);
-        //logger.setLevel(logLevel);
-        //logger.setUseParentHandlers(true);
-        logger.setParent(LogManager.getLogManager().getLogger(Logger.GLOBAL_LOGGER_NAME));
-    }
+    private static Logger logger = Logger.getLogger(Jtail.class.getName());
 
     /**
      * @param args the command line arguments
@@ -58,9 +37,9 @@ public class Jtail
      * the file does not exist, or the watch service on the file borks.
      */
     public static void main(String[] args) throws IOException
-    {
-        initializeLogging();
+    {        
         logger.entering(Jtail.class.getName(), "main");
+
         if (args.length != 1)
         {
             System.out.println("jtail <filename>");
