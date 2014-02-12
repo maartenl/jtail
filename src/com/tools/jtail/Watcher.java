@@ -45,23 +45,17 @@ public class Watcher
 
     private static long size = 0;
     
-    private boolean showFilenames;
-    
-    private boolean retry;
-
     @SuppressWarnings("unchecked")
     private static <T> WatchEvent<T> cast(WatchEvent<?> event)
     {
         return (WatchEvent<T>) event;
     }
 
-    public void watch(String filename, boolean showFilenames, boolean follow, boolean retry)
+    public void watch(String filename)
             throws IOException
     {
         logger.entering(Watcher.class.getName(), "watch");
-        this.showFilenames = showFilenames;
-        this.retry = retry;
-        if (follow)
+        if (Options.follow())
         {
             tailFile(FileSystems.getDefault().getPath(filename));
             return;
@@ -132,7 +126,7 @@ public class Watcher
     private void tailFile(Path file) throws IOException
     {
         logger.entering(Watcher.class.getName(), "tailFile");
-        if (showFilenames)
+        if (Options.showFilenames())
         {
             System.out.println("==> " + file.toString() + " <==");
         }
