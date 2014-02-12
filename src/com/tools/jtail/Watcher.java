@@ -44,6 +44,10 @@ public class Watcher
     private static long position = 0;
 
     private static long size = 0;
+    
+    private boolean showFilenames;
+    
+    private boolean retry;
 
     @SuppressWarnings("unchecked")
     private static <T> WatchEvent<T> cast(WatchEvent<?> event)
@@ -51,9 +55,17 @@ public class Watcher
         return (WatchEvent<T>) event;
     }
 
-    public void watch(String filename) throws IOException
+    public void watch(String filename, boolean showFilenames, boolean follow, boolean retry)
+            throws IOException
     {
         logger.entering(Watcher.class.getName(), "watch");
+        this.showFilenames = showFilenames;
+        this.retry = retry;
+        if (follow)
+        {
+            tailFile(FileSystems.getDefault().getPath(filename));
+            return;
+        }
         try (WatchService watcher = FileSystems.getDefault().newWatchService())
         {
             Path file = FileSystems.getDefault().getPath(filename);
@@ -120,6 +132,10 @@ public class Watcher
     private void tailFile(Path file) throws IOException
     {
         logger.entering(Watcher.class.getName(), "tailFile");
+        if (showFilenames)
+        {
+            System.out.println("==> " + file.toString() + " <==");
+        }
         byte[] buffer = new byte[1024];
         size = file.toFile().length();
         if (position > size)
