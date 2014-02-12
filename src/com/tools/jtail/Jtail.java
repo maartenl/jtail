@@ -56,7 +56,7 @@ public class Jtail
             System.out.println("jtail: version 1.0, build using jdk7_u45");
             System.exit(2);
         }
-        if (Options.getNumberOfFiles() != 1 || Options.showHelp())
+        if (Options.getNumberOfFiles() == 0 || Options.showHelp())
         {
             System.out.println("Usage: tail [OPTION]... [FILE]...");
             System.out.println("Print the last " + Options.DEFAULT_LINES + " lines of each FILE to standard output.");
