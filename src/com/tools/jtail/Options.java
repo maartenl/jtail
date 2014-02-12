@@ -18,6 +18,7 @@ package com.tools.jtail;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.logging.Logger;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -30,12 +31,13 @@ import joptsimple.OptionSpec;
  */
 public class Options
 {
+    private static final Logger logger = Logger.getLogger(Options.class.getName());
 
     private static OptionSet options;
 
-    private static OptionParser parser;
+    private static final OptionParser parser;
 
-    private static OptionSpec<String> files;
+    private static final OptionSpec<String> files;
 
     public static final int DEFAULT_LINES = 10;
 
@@ -58,12 +60,12 @@ public class Options
                 nonOptions("files to chew on").ofType(String.class).describedAs("input files");
             }
         };
+        files = parser.nonOptions().ofType(String.class);
     }
 
     public static void parse(String[] args)
     {
         options = parser.parse(args);
-        files = parser.nonOptions().ofType(String.class);
     }
 
     public static void printHelp() throws IOException
@@ -78,7 +80,9 @@ public class Options
 
     public static int getNumberOfFiles()
     {
-        return options.valuesOf(files).size();
+        final int size = options.valuesOf(files).size();
+        logger.exiting(Options.class.getName(),"getNumberOfFiles", size);
+        return size;
     }
 
     public static boolean showHelp()

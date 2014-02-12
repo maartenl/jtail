@@ -72,7 +72,7 @@ public class Jtail
         // retrieve the filename from the command line parameters.
         String filename = Options.getFile(0);
 
-        logger.finer("Start the watcher.");
+        logger.log(Level.FINER, "Start a watcher with filename {0}.", filename);
         Watcher watcher = new Watcher();
         watcher.watch(filename);
         logger.exiting(Jtail.class.getName(), "main");
