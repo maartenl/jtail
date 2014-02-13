@@ -9,7 +9,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU General Public LicenEse for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -27,7 +27,9 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,10 +43,16 @@ public class Watcher
 
     private static final Logger logger = Logger.getLogger(Watcher.class.getName());
 
-    private static long position = 0;
+    /**
+     * Set of directories that need to be watched.
+     */
+    private final Set<Path> directories = new HashSet<>();
 
-    private static long size = 0;
-    
+    /**
+     * Files to trail.
+     */
+    private final Set<FileInfo> files = new HashSet<>();
+
     @SuppressWarnings("unchecked")
     private static <T> WatchEvent<T> cast(WatchEvent<?> event)
     {
@@ -55,21 +63,100 @@ public class Watcher
             throws IOException
     {
         logger.entering(Watcher.class.getName(), "watch");
-        if (Options.follow())
+
+        FileInfo fileInfo = new FileInfo(filename);
+        files.add(fileInfo);
+        directories.add(fileInfo.getDirectory());
+        logger.exiting(Watcher.class.getName(), "watch");
+    }
+
+    private void processEvent(WatchEvent<?> event) throws IOException
+    {
+        logger.entering(Watcher.class.getName(), "processEvent");
+        WatchEvent.Kind kind = event.kind();
+        // TBD - provide example of how OVERFLOW event is handled
+        if (kind == OVERFLOW)
         {
-            tailFile(FileSystems.getDefault().getPath(filename));
             return;
         }
+        // Context for directory entry event is the file name of entry
+        WatchEvent<Path> ev = cast(event);
+        Path context = ev.context();
+        logger.log(Level.FINEST, "processEvent filename {0}", context.toString());
+        for (FileInfo info : files)
+        {
+            if (info.getFile().getFileName().toString().compareTo(context.toString()) == 0)
+            {
+                if (event.kind() == ENTRY_DELETE)
+                {
+                    throw new IOException("File " + info.getFilename() + " has been deleted.");
+                } else if (event.kind() == ENTRY_CREATE)
+                {
+                    throw new IOException("File " + info.getFilename() + " has been created. That's weird.");
+                } else if (event.kind() == ENTRY_MODIFY)
+                {
+                    tailFile(info);
+                } else
+                {
+                    throw new IOException("Unkown event " + event.kind() + " for file " + info.getFilename() + ".");
+                }
+            }
+        }
+        logger.exiting(Watcher.class.getName(), "processEvent");
+    }
+
+    private void tailFile(FileInfo info) throws IOException
+    {
+        logger.entering(Watcher.class.getName(), "tailFile");
+        if (Options.showFilenames())
+        {
+            System.out.println("==> " + info.getFilename() + " <==");
+        }
+        byte[] buffer = new byte[1024];
+        if (info.getPosition() > info.getSize())
+        {
+            System.out.println("jtail: " + info.getFilename() + ": file truncated");
+            info.setPosition(0);
+        }
+        try (RandomAccessFile reader = new RandomAccessFile(info.getFile().toFile(), "r");)
+        {
+            reader.seek(info.getPosition());
+            while ((reader.read(buffer))
+                    != -1)
+            {
+                System.out.print(new String(buffer));
+            }
+            info.setPosition(reader.getFilePointer());
+        }
+        logger.exiting(Watcher.class.getName(), "tailFile");
+    }
+
+    void startWatching() throws IOException
+    {
+        logger.entering(Watcher.class.getName(), "startWatching");
+        if (!Options.follow())
+        {
+            for (FileInfo info : files)
+            {
+                tailFile(info);
+            }
+            return;
+        }
+        // if we wish to follow the file, we need to use the watch service in
+        // NIO.2 of Java 7.
         try (WatchService watcher = FileSystems.getDefault().newWatchService())
         {
-            Path file = FileSystems.getDefault().getPath(filename);
-            Path directory = file.toAbsolutePath().getParent();
-            System.out.println("Get current path:" + FileSystems.getDefault().getPath(".").toAbsolutePath());
-            System.out.println("Directory:" + directory.toString());
-            // registering for file events
-            WatchKey key = directory.register(watcher, ENTRY_MODIFY);
+            Set<WatchKey> keys = new HashSet<>();
+            for (Path directory : directories)
+            {
+                logger.log(Level.FINEST, "Watching directory:{0}", directory.toString());
+                // registering for file events
+                WatchKey key = directory.register(watcher, ENTRY_MODIFY);
+                keys.add(key);
+            }
             // processing events
             boolean keepGoing = true;
+            logger.log(Level.FINEST, "Entering while-loop.");
             while (keepGoing)
             {
                 WatchKey foundKey;
@@ -86,69 +173,17 @@ public class Watcher
                 // foundKey == key,... it's the only registered key
                 for (WatchEvent<?> event : events)
                 {
-                    processEvent(event, file);
+                    processEvent(event);
                 }
                 keepGoing = foundKey.reset();
             }
-            key.cancel();
-        }
-        logger.exiting(Watcher.class.getName(), "watch");
-    }
+            for (WatchKey key : keys)
+            {
+                key.cancel();
+            }
 
-    private void processEvent(WatchEvent<?> event, Path file) throws IOException
-    {
-        logger.entering(Watcher.class.getName(), "processEvent");
-        WatchEvent.Kind kind = event.kind();
-        // TBD - provide example of how OVERFLOW event is handled
-        if (kind == OVERFLOW)
-        {
-            return;
         }
-        // Context for directory entry event is the file name of entry
-        WatchEvent<Path> ev = cast(event);
-        Path context = ev.context();
-        if (file.compareTo(context) == 0)
-        {
-            if (event.kind() == ENTRY_DELETE)
-            {
-                throw new IOException("File has been deleted.");
-            }
-            if (event.kind() == ENTRY_CREATE)
-            {
-                throw new IOException("File has been created. That's weird.");
-            }
-            // kind == ENTRY_MODIFY
-            tailFile(context);
-        }
-        logger.exiting(Watcher.class.getName(), "processEvent");
-    }
-
-    private void tailFile(Path file) throws IOException
-    {
-        logger.entering(Watcher.class.getName(), "tailFile");
-        if (Options.showFilenames())
-        {
-            System.out.println("==> " + file.toString() + " <==");
-        }
-        byte[] buffer = new byte[1024];
-        size = file.toFile().length();
-        if (position > size)
-        {
-            System.out.println("jtail: log.txt: file truncated");
-            position = 0;
-        }
-        try (RandomAccessFile reader = new RandomAccessFile(file.toFile(), "r");)
-        {
-            reader.seek(position);
-            while ((reader.read(buffer))
-                    != -1)
-            {
-                System.out.print(new String(buffer));
-            }
-            position = reader.getFilePointer();
-        }
-        size = position;
-        logger.exiting(Watcher.class.getName(), "tailFile");
+        logger.exiting(Watcher.class.getName(), "startWatching");
     }
 
 }

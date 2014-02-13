@@ -17,6 +17,7 @@
 package com.tools.jtail;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,6 +31,10 @@ public class Jtail
 {
 
     private static final Logger logger = Logger.getLogger(Jtail.class.getName());
+
+    private static final int EXIT_VERSION = 2;
+
+    private static final int EXIT_HELP = 1;
 
     /**
      * @param args the command line arguments
@@ -47,6 +52,7 @@ public class Jtail
                 buffer.append(string).append(" ");
             }
             logger.finest(buffer.toString());
+            logger.log(Level.FINEST, "Get current path:{0}", FileSystems.getDefault().getPath(".").toAbsolutePath());
         }
 
         Options.parse(args);
@@ -54,10 +60,14 @@ public class Jtail
         if (Options.showVersion())
         {
             System.out.println("jtail: version 1.0, build using jdk7_u45");
-            System.exit(2);
+            System.exit(EXIT_VERSION);
         }
         if (Options.getNumberOfFiles() == 0 || Options.showHelp())
         {
+            if (Options.getNumberOfFiles() == 0)
+            {
+                logger.log(Level.FINEST, "no files found.");
+            }
             System.out.println("Usage: tail [OPTION]... [FILE]...");
             System.out.println("Print the last " + Options.DEFAULT_LINES + " lines of each FILE to standard output.");
             System.out.println("With more than one FILE, precede each with a header giving the file name.");
@@ -67,14 +77,16 @@ public class Jtail
             System.out.println("");
             System.out.println("For debugging, try 'java -Djava.util.logging.config.file=logging.properties'.");
             System.out.println("An appropriate logging.properties file is included in the jar.");
-            System.exit(1);
+            System.exit(EXIT_HELP);
         }
-        // retrieve the filename from the command line parameters.
-        String filename = Options.getFile(0);
 
-        logger.log(Level.FINER, "Start a watcher with filename {0}.", filename);
         Watcher watcher = new Watcher();
-        watcher.watch(filename);
+        for (String filename : Options.files())
+        {
+            logger.log(Level.FINER, "Start a watcher with filename {0}.", filename);
+            watcher.watch(filename);
+        }
+        watcher.startWatching();
         logger.exiting(Jtail.class.getName(), "main");
     }
 }

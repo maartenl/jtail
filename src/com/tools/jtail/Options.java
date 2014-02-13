@@ -18,6 +18,9 @@ package com.tools.jtail;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -49,7 +52,7 @@ public class Options
             
             {
                 acceptsAll(Arrays.asList("c", "bytes"), "output the last K bytes; alternatively, use -c +K to output bytes starting with the Kth of each file").withRequiredArg().ofType(String.class);
-                acceptsAll(Arrays.asList("f", "follow"), "output appended data as the file grows; -f, --follow, and --follow=descriptor are equivalent").withOptionalArg().ofType(String.class);
+                acceptsAll(Arrays.asList("f", "follow"), "output appended data as the file grows; -f, --follow, and --follow=descriptor are equivalent"); // .withOptionalArg().ofType(String.class);
                 accepts("F", "output appended data as the file grows; -f, --follow, and --follow=descriptor are equivalent");
                 acceptsAll(Arrays.asList("n", "lines"), "output the last K lines, instead of the last 10; or use -n +K to output lines starting with the Kth").withRequiredArg().ofType(String.class);
                 accepts("max-unchanged-stats", "with --follow=name, reopen a FILE which has not changed size after N (default 5) iterations to see if it has been unlinked or renamed (this is the usual case of rotated log files). With inotify, this option is rarely useful. ").withRequiredArg().ofType(Integer.class);
@@ -182,6 +185,14 @@ public class Options
             }
             throw new RuntimeException("--verbose and -q are mutually exclusive command line arguments.");
         }
+        if (!hasMultipleFiles())
+        {
+            if (options.has("verbose"))
+            {
+                return true;
+            }
+            return false;
+        }
         return true;
     }
 
@@ -190,7 +201,7 @@ public class Options
      *
      * @return
      */
-    public static boolean hasMultipleFiles()
+    private static boolean hasMultipleFiles()
     {
         return getNumberOfFiles() > 1;
     }
@@ -291,10 +302,11 @@ public class Options
     }
 
     /**
-     * Indicates we wish to follow/see the file from the beginning of
-     * the x lines or x bytes, instead of the <i>last</i> x lines or
-     * x bytes in the file.
-     * @return 
+     * Indicates we wish to follow/see the file from the beginning of the x
+     * lines or x bytes, instead of the <i>last</i> x lines or x bytes in the
+     * file.
+     *
+     * @return
      */
     public static boolean fromBeginning()
     {
@@ -323,4 +335,15 @@ public class Options
         }
         return parseLongArgument((String) options.valueOf("c"));
     }
+
+    /**
+     * Returns the list of filenames provided in the command line.
+     *
+     * @return unmodifiable list of Strings.
+     */
+    public static List<String> files()
+    {
+        return Collections.unmodifiableList((List<String>) options.valuesOf(files));
+    }
+
 }
