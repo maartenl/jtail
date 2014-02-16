@@ -80,10 +80,32 @@ public class Jtail
             System.exit(EXIT_HELP);
         }
 
-        Watcher watcher = new Watcher();
+        if (!Options.follow())
+        {
+            for (String filename : Options.files())
+            {
+                FileInfo info = new FileInfo(filename);
+                TailFile tailFile = TailFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
+                tailFile.tail(System.out);
+            }
+            return;
+        }
+        logger.log(Level.FINER, "Create watcher");
+        Watcher watcher = new Watcher()
+        {
+
+            @Override
+            public void eventDetected(FileInfo info) throws IOException
+            {
+                logger.entering(Watcher.class.getName(), "tailFile");
+                TailFile tailFile = TailFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
+                tailFile.tail(System.out);
+                logger.exiting(Watcher.class.getName(), "tailFile");
+            }
+        };
         for (String filename : Options.files())
         {
-            logger.log(Level.FINER, "Start a watcher with filename {0}.", filename);
+            logger.log(Level.FINER, "Watch filename {0}.", filename);
             watcher.watch(filename);
         }
         watcher.startWatching();

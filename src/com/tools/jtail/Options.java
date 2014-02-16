@@ -42,7 +42,7 @@ public class Options
 
     private static final OptionSpec<String> files;
 
-    public static final int DEFAULT_LINES = 10;
+    public static final Long DEFAULT_LINES = 10l;
 
     static
     {
@@ -296,6 +296,10 @@ public class Options
     {
         if (!options.has("n"))
         {
+            if (!options.has("c"))
+            {
+                return DEFAULT_LINES;
+            }
             return null;
         }
         return parseLongArgument((String) options.valueOf("n"));

@@ -9,7 +9,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public LicenEse for more details.
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -34,11 +34,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Watches for changes on the file that needs to be tailed.
+ * Watches for changes on the file that needs to be tailed. Is only to be used
+ * when the switch '-f' is used.
  *
  * @author maartenl
  */
-public class Watcher
+public abstract class Watcher
 {
 
     private static final Logger logger = Logger.getLogger(Watcher.class.getName());
@@ -95,7 +96,7 @@ public class Watcher
                     throw new IOException("File " + info.getFilename() + " has been created. That's weird.");
                 } else if (event.kind() == ENTRY_MODIFY)
                 {
-                    tailFile(info);
+                    eventDetected(info);
                 } else
                 {
                     throw new IOException("Unkown event " + event.kind() + " for file " + info.getFilename() + ".");
@@ -105,43 +106,11 @@ public class Watcher
         logger.exiting(Watcher.class.getName(), "processEvent");
     }
 
-    private void tailFile(FileInfo info) throws IOException
-    {
-        logger.entering(Watcher.class.getName(), "tailFile");
-        if (Options.showFilenames())
-        {
-            System.out.println("==> " + info.getFilename() + " <==");
-        }
-        byte[] buffer = new byte[1024];
-        if (info.getPosition() > info.getSize())
-        {
-            System.out.println("jtail: " + info.getFilename() + ": file truncated");
-            info.setPosition(0);
-        }
-        try (RandomAccessFile reader = new RandomAccessFile(info.getFile().toFile(), "r");)
-        {
-            reader.seek(info.getPosition());
-            while ((reader.read(buffer))
-                    != -1)
-            {
-                System.out.print(new String(buffer));
-            }
-            info.setPosition(reader.getFilePointer());
-        }
-        logger.exiting(Watcher.class.getName(), "tailFile");
-    }
+    public abstract void eventDetected(FileInfo info) throws IOException;
 
-    void startWatching() throws IOException
+    public void startWatching() throws IOException
     {
         logger.entering(Watcher.class.getName(), "startWatching");
-        if (!Options.follow())
-        {
-            for (FileInfo info : files)
-            {
-                tailFile(info);
-            }
-            return;
-        }
         // if we wish to follow the file, we need to use the watch service in
         // NIO.2 of Java 7.
         try (WatchService watcher = FileSystems.getDefault().newWatchService())

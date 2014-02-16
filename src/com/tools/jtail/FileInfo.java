@@ -29,7 +29,9 @@ public class FileInfo
 {
 
     private final String filename;
+    
     private Path file;
+    
     private long position;
 
     public FileInfo(String filename) throws IOException
@@ -60,8 +62,20 @@ public class FileInfo
         return position;
     }
 
+    /**
+     * Sets the position. If position is invalid, will be made valid.
+     * @param position 
+     */
     public void setPosition(long position)
     {
+        if (position > getSize())
+        {
+            position = getSize();
+        }
+        if (position < 0)
+        {
+            position = 0;
+        }
         this.position = position;
     }
 
