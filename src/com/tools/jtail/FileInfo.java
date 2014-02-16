@@ -22,7 +22,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
+ * A fairly simple data object, with some additional file operations.
+ * <img src="../../../images/FileInfo.png"/>
+ * @author maartenl
  *
+ * @startuml
+ * FileInfo : -filename: String
+ * FileInfo : -file: Path
+ * FileInfo : -position: long
+ * FileInfo : +FileInfo(filename: String)
+ * FileInfo : +getSize(): Long 
+ * FileInfo : +getDirectory(): Path 
+ * FileInfo : +getPosition(): long 
+ * FileInfo : +setPosition(position: long)
+ * FileInfo : +getFile(): Path 
+ * FileInfo : +getFilename(): String 
+ * @enduml
  * @author maartenl
  */
 public class FileInfo
