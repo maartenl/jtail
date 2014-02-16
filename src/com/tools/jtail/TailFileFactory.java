@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  *
  * @author maartenl
  */
-public class TailFactory
+public class TailFileFactory
 {
 
     /**
@@ -41,7 +41,7 @@ public class TailFactory
      */
     private static final int BUFFER_SIZE = 4096;
 
-    private static final Logger logger = Logger.getLogger(TailFactory.class.getName());
+    private static final Logger logger = Logger.getLogger(TailFileFactory.class.getName());
 
     public static TailFile createTailFile(FileInfo info, Long bytes, Long lines, boolean fromBeginning, boolean showFilenames)
     {

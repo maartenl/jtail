@@ -85,7 +85,7 @@ public class Jtail
             for (String filename : Options.files())
             {
                 FileInfo info = new FileInfo(filename);
-                TailFile tailFile = TailFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
+                TailFile tailFile = TailFileFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
                 tailFile.tail(System.out);
             }
             return;
@@ -98,7 +98,7 @@ public class Jtail
             public void eventDetected(FileInfo info) throws IOException
             {
                 logger.entering(Watcher.class.getName(), "tailFile");
-                TailFile tailFile = TailFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
+                TailFile tailFile= TailFileFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
                 tailFile.tail(System.out);
                 logger.exiting(Watcher.class.getName(), "tailFile");
             }
