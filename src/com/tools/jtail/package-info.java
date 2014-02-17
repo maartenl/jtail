@@ -19,7 +19,7 @@
  * The only package (for now). Contains all required class files for
  * the jtail application.
  * <img src="../../../images/package-info.png"/>
- * <i>Component Diagram.</i>
+ * <br/><i>Component Diagram.</i>
  * @author maartenl
  *
  * @startuml
