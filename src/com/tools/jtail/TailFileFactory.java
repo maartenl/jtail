@@ -30,7 +30,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Creates TailFile implementations depending on the requirements.
+ * <img src="../../../images/TailFileFactory.png"/>
+ * @author maartenl
  *
+ * @startuml
+ * TailFileFactory : +<u>createTailFile(info:FileInfo, bytes:Long , lines:Long , fromBeginning:boolean , showFilenames:boolean ): TailFile</u>
+ * TailFileBytes <-- TailFileFactory
+ * TailFileLinesFromEnd <-- TailFileFactory
+ * TailFileLinesFromBeginning <-- TailFileFactory
+ * interface TailFile
+ * TailFile <|-- TailFileBytes
+ * TailFile <|-- TailFileLinesFromEnd
+ * TailFile <|-- TailFileLinesFromBeginning
+ * @enduml
  * @author maartenl
  */
 public class TailFileFactory
