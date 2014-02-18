@@ -34,8 +34,24 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Watches for changes on the file that needs to be tailed. Is only to be used
- * when the switch '-f' is used.
+ * <p>Watches for changes on the file that needs to be tailed. Is only to be used
+ * when the switch '-f' is used.</p>
+ * <img src="../../../images/Watcher.png"/>
+ *
+ * @startuml
+ * interface java.nio.file.WatchService
+ * interface java.nio.file.WatchKey
+ * class java.nio.file.FileSystem
+ * java.nio.file.FileSystem: + {abstract}newWatchService(): java.nio.file.WatchService 
+ * abstract class Watcher
+ * Watcher --> java.nio.file.WatchService
+ * Watcher --> java.nio.file.WatchKey
+ * Watcher --> java.nio.file.FileSystem
+ * Watcher --> FileInfo
+ * Watcher : + {abstract} eventDetected(info: FileInfo) throws IOException
+ * Watcher : +watch(filename: String)
+ * Watcher : +startWatching() throws IOException
+ * @enduml
  *
  * @author maartenl
  */

@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  * @author maartenl
  *
  * @startuml
- * TailFileFactory : +<u>createTailFile(info:FileInfo, bytes:Long , lines:Long , fromBeginning:boolean , showFilenames:boolean ): TailFile</u>
+ * TailFileFactory : +{static} createTailFile(info:FileInfo, bytes:Long , lines:Long , fromBeginning:boolean , showFilenames:boolean ): TailFile
  * TailFileBytes <-- TailFileFactory
  * TailFileLinesFromEnd <-- TailFileFactory
  * TailFileLinesFromBeginning <-- TailFileFactory
