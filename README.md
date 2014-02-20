@@ -24,6 +24,15 @@ With Java SE 7, this possibility is open to us as well, by means of the WatchSer
 
 Just thought I'd see how good this works.
 
+Usage
+-----
+
+java -classpath jtail.jar com.tools.jtail.Jtail --help
+
+java -classpath jtail.jar com.tools.jtail.Jtail -version
+
+java -classpath jtail.jar com.tools.jtail.Jtail ipsum.txt
+
 For more information
 --------------------
 
