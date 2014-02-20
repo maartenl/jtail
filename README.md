@@ -27,11 +27,11 @@ Just thought I'd see how good this works.
 Usage
 -----
 
-java -classpath jtail.jar com.tools.jtail.Jtail --help
+java -classpath jtail.jar;jopt-simple-4.5.jar com.tools.jtail.Jtail --help
 
-java -classpath jtail.jar com.tools.jtail.Jtail -version
+java -classpath jtail.jar;jopt-simple-4.5.jar com.tools.jtail.Jtail -version
 
-java -classpath jtail.jar com.tools.jtail.Jtail ipsum.txt
+java -classpath jtail.jar;jopt-simple-4.5.jar com.tools.jtail.Jtail ipsum.txt
 
 For more information
 --------------------
