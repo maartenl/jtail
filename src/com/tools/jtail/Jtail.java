@@ -91,16 +91,16 @@ public class Jtail
             return;
         }
         logger.log(Level.FINER, "Create watcher");
-        Watcher watcher = new Watcher()
+        Watcher watcher = new FileSystemWatcher()
         {
 
             @Override
             public void eventDetected(FileInfo info) throws IOException
             {
-                logger.entering(Watcher.class.getName(), "tailFile");
+                logger.entering(FileSystemWatcher.class.getName(), "tailFile");
                 TailFile tailFile= TailFileFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
                 tailFile.tail(System.out);
-                logger.exiting(Watcher.class.getName(), "tailFile");
+                logger.exiting(FileSystemWatcher.class.getName(), "tailFile");
             }
         };
         for (String filename : Options.files())
