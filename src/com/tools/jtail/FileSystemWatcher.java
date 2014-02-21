@@ -34,8 +34,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * <p>Watches for changes on the file that needs to be tailed. Is only to be used
- * when the switch '-f' is used.</p>
+ * <p>Implementation of the Watcher interface using the WatchService of NIO.2.
+ * </p>
  * <img src="../../../images/FileSystemWatcher.png"/>
  *
  * @startuml
@@ -49,9 +49,9 @@ import java.util.logging.Logger;
  * FileSystemWatcher --> java.nio.file.WatchService
  * FileSystemWatcher --> java.nio.file.WatchKey
  * FileSystemWatcher --> java.nio.file.FileSystem
- * FileSystemWatcher --> FileInfo
+ * Watcher --> FileInfo
  * FileSystemWatcher : + {abstract} eventDetected(info: FileInfo) throws IOException
- * FileSystemWatcher : +watch(filename: String)
+ * FileSystemWatcher : +watch(fileInfo: FileInfo)
  * FileSystemWatcher : +startWatching() throws IOException
  * @enduml
  *
@@ -79,12 +79,10 @@ public abstract class FileSystemWatcher implements Watcher
     }
 
     @Override
-    public void watch(String filename)
+    public void watch(FileInfo fileInfo)
             throws IOException
     {
         logger.entering(FileSystemWatcher.class.getName(), "watch");
-
-        FileInfo fileInfo = new FileInfo(filename);
         files.add(fileInfo);
         directories.add(fileInfo.getDirectory());
         logger.exiting(FileSystemWatcher.class.getName(), "watch");

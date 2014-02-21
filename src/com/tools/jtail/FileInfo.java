@@ -45,7 +45,7 @@ public class FileInfo
 
     private final String filename;
     
-    private Path file;
+    private final Path file;
     
     private long position;
 
@@ -72,6 +72,11 @@ public class FileInfo
         return file.getParent();
     }
 
+    /**
+     * Returns the current position in the file.
+     * Will be initialized to 0.
+     * @return 
+     */
     public long getPosition()
     {
         return position;

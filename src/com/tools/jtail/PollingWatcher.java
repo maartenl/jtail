@@ -17,8 +17,6 @@
 package com.tools.jtail;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.WatchEvent;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -42,12 +40,10 @@ public abstract class PollingWatcher implements Watcher
     private final Set<FileInfo> files = new HashSet<>();
 
     @Override
-    public void watch(String filename)
+    public void watch(FileInfo fileInfo)
             throws IOException
     {
         logger.entering(PollingWatcher.class.getName(), "watch");
-
-        FileInfo fileInfo = new FileInfo(filename);
         files.add(fileInfo);
         logger.exiting(PollingWatcher.class.getName(), "watch");
     }

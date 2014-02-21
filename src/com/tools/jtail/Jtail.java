@@ -18,6 +18,8 @@ package com.tools.jtail;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,12 +38,14 @@ public class Jtail
 
     private static final int EXIT_HELP = 1;
 
+    public static final String VERSION = "1.1";
+
     private static void runTail(FileInfo info) throws IOException
     {
-        logger.entering(FileSystemWatcher.class.getName(), "tailFile");
+        logger.entering(FileSystemWatcher.class.getName(), "runTail");
         TailFile tailFile = TailFileFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
         tailFile.tail(System.out);
-        logger.exiting(FileSystemWatcher.class.getName(), "tailFile");
+        logger.exiting(FileSystemWatcher.class.getName(), "runTail");
     }
 
     /**
@@ -67,7 +71,7 @@ public class Jtail
 
         if (Options.showVersion())
         {
-            System.out.println("jtail: version 1.0, build using jdk7_u45");
+            System.out.println("jtail: version " + VERSION + ", build using jdk7_u45");
             System.exit(EXIT_VERSION);
         }
         if (Options.getNumberOfFiles() == 0 || Options.showHelp())
@@ -87,15 +91,16 @@ public class Jtail
             System.out.println("An appropriate logging.properties file is included in the jar.");
             System.exit(EXIT_HELP);
         }
-
+        List<FileInfo> fileInfos = new ArrayList<>();
+        for (String filename : Options.files())
+        {
+            FileInfo info = new FileInfo(filename);
+            TailFile tailFile = TailFileFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
+            tailFile.tail(System.out);
+            fileInfos.add(info);
+        }
         if (!Options.follow())
         {
-            for (String filename : Options.files())
-            {
-                FileInfo info = new FileInfo(filename);
-                TailFile tailFile = TailFileFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
-                tailFile.tail(System.out);
-            }
             return;
         }
         logger.log(Level.FINER, "Create watcher");
@@ -117,10 +122,10 @@ public class Jtail
                 runTail(info);
             }
         });
-        for (String filename : Options.files())
+        for (FileInfo info : fileInfos)
         {
-            logger.log(Level.FINER, "Watch filename {0}.", filename);
-            watcher.watch(filename);
+            logger.log(Level.FINER, "Watch filename {0}.", info.getFilename());
+            watcher.watch(info);
         }
         watcher.startWatching();
         logger.exiting(Jtail.class.getName(), "main");

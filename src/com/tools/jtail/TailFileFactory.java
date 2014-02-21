@@ -22,8 +22,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -32,19 +30,15 @@ import java.util.logging.Logger;
 /**
  * Creates TailFile implementations depending on the requirements.
  * <img src="../../../images/TailFileFactory.png"/>
+ *
  * @author maartenl
  *
- * @startuml
- * TailFileFactory : +{static} createTailFile(info:FileInfo, bytes:Long , lines:Long , fromBeginning:boolean , showFilenames:boolean ): TailFile
- * TailFileBytes <-- TailFileFactory
- * TailFileLinesFromEnd <-- TailFileFactory
- * TailFileLinesFromBeginning <-- TailFileFactory
- * interface TailFile
- * TailFile <|-- TailFileBytes
- * TailFile <|-- TailFileLinesFromEnd
- * TailFile <|-- TailFileLinesFromBeginning
- * @enduml
- * @author maartenl
+ * @startuml TailFileFactory : +{static} createTailFile(info:FileInfo,
+ * bytes:Long , lines:Long , fromBeginning:boolean , showFilenames:boolean ):
+ * TailFile TailFileBytes <-- TailFileFactory TailFileLinesFromEnd <--
+ * TailFileFactory TailFileLinesFromBeginning <-- TailFileFactory interface
+ * TailFile TailFile <|-- TailFileBytes TailFile <|-- TailFileLinesFromEnd
+ * TailFile <|-- TailFileLinesFromBeginning @enduml @author maartenl
  */
 public class TailFileFactory
 {
@@ -58,6 +52,12 @@ public class TailFileFactory
 
     public static TailFile createTailFile(FileInfo info, Long bytes, Long lines, boolean fromBeginning, boolean showFilenames)
     {
+        if (info.getPosition() != 0)
+        {
+            // we're already at a proper position,
+            // means we're already tailing this one.
+            return new TailFileBytes(info, showFilenames);
+        }
         if (fromBeginning)
         {
             if (bytes != null)
@@ -219,7 +219,10 @@ public class TailFileFactory
                     reader.read(buffer);
                     String s = new String(buffer);
                     String[] split = s.split("\n");
-                    logger.log(Level.FINEST, "split: {0}...{1}:{2}", new Object[]{split[0], split.length, split[split.length - 1]});
+                    logger.log(Level.FINEST, "split: {0}...{1}:{2}", new Object[]
+                    {
+                        split[0], split.length, split[split.length - 1]
+                    });
                     if (totalRead.isEmpty())
                     {
                         linesRead += split.length;

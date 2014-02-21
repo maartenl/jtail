@@ -14,33 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package com.tools.jtail;
 
 import java.io.IOException;
 
 /**
- * <p>Interface for watching for changes on the file that needs to be tailed. 
- * Is only to be used
- * when the switch '-f' is used.</p>
+ * <p>
+ * Interface for watching for changes on the file that needs to be tailed. Is
+ * only to be used when the switch '-f' is used.</p>
  * <img src="../../../images/Watcher.png"/>
  *
- * @startuml
- * interface Watcher
- * abstract class FileSystemWatcher
- * abstract class PollingWatcher
- * Watcher <|-- FileSystemWatcher
- * Watcher <|-- PollingWatcher
+ * @startuml interface Watcher abstract class FileSystemWatcher abstract class
+ * PollingWatcher Watcher <|-- FileSystemWatcher Watcher <|-- PollingWatcher
  * @enduml
  *
- * @author maartenl
+ * @
+ * author maartenl
  */
-public interface Watcher {
+public interface Watcher
+{
 
-    void eventDetected(FileInfo info) throws IOException;
+    public void eventDetected(FileInfo info) throws IOException;
 
-    void startWatching() throws IOException;
+    public void startWatching() throws IOException;
 
-    void watch(String filename) throws IOException;
-    
+    public void watch(FileInfo fileInfo) throws IOException;
+
 }
