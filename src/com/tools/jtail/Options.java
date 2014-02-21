@@ -44,6 +44,8 @@ public class Options
 
     public static final Long DEFAULT_LINES = 10l;
 
+    public static final Long DEFAULT_SECONDS_SLEEP = 1l;
+
     static
     {
         parser = new OptionParser("F")
@@ -59,7 +61,8 @@ public class Options
                 accepts("pid", "(NOT IMPLEMENTED) with -f, terminate after process ID, PID dies").withRequiredArg().ofType(Long.class);
                 acceptsAll(Arrays.asList("q", "quiet", "silent"), "never output headers giving filesnames");
                 accepts("retry", "keep trying to open a file even when it is or becomes inaccessible; useful when following by name, i.e., with --follow=name");
-                acceptsAll(Arrays.asList("s", "sleep-interval"), "(NOT IMPLEMENTED) with -f, sleep for approximately N seconds (default 1.0) between iterations. With inotify and --pid=P, check process P at least once every N seconds.").withRequiredArg().ofType(Integer.class);
+                acceptsAll(Arrays.asList("s", "sleep-interval"), "with -f and -old, sleep for approximately N seconds (default 1.0) between iterations. With inotify and --pid=P, check process P at least once every N seconds.").withRequiredArg().ofType(Integer.class);
+                acceptsAll(Arrays.asList("o", "old"), "use polling instead of NIO.2 to detect changes to files.");
                 acceptsAll(Arrays.asList("v", "verbose"), "always output headers giving file names");
                 acceptsAll(Arrays.asList("h", "help"), "display this help and exit").forHelp();
                 accepts("version", "output version information and exit");
@@ -119,6 +122,18 @@ public class Options
     }
 
     /**
+     * Use polling the filesystem (old) instead of letting the filesystem tell
+     * us if anything's(new) changed.
+     *
+     * @return true, use the old way. False otherwise.
+     * @see FileSystemWatcher
+     */
+    public static boolean usePolling()
+    {
+        return options.has("o");
+    }
+
+    /**
      * Do we need to show the version?
      *
      * @return true, show version, false otherwise.
@@ -152,6 +167,23 @@ public class Options
         }
 
         return (Long) options.valueOf("pid");
+    }
+
+    /**
+     * With -f and -old, sleep for approximately N seconds (default 1.0) between
+     * iterations. With inotify and --pid=P, check process P at least once every
+     * N seconds.
+     *
+     * @return number of seconds to sleep. Default is 1 second.
+     */
+    public static Long sleep()
+    {
+        if (!options.has("s"))
+        {
+            return DEFAULT_SECONDS_SLEEP;
+        }
+
+        return (Long) options.valueOf("s");
     }
 
     /**

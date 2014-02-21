@@ -36,6 +36,14 @@ public class Jtail
 
     private static final int EXIT_HELP = 1;
 
+    private static void runTail(FileInfo info) throws IOException
+    {
+        logger.entering(FileSystemWatcher.class.getName(), "tailFile");
+        TailFile tailFile = TailFileFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
+        tailFile.tail(System.out);
+        logger.exiting(FileSystemWatcher.class.getName(), "tailFile");
+    }
+
     /**
      * @param args the command line arguments
      * @throws IOException if something with wrong with the fileIO. For example,
@@ -91,18 +99,24 @@ public class Jtail
             return;
         }
         logger.log(Level.FINER, "Create watcher");
-        Watcher watcher = new FileSystemWatcher()
+        Watcher watcher = (Options.usePolling() ? new PollingWatcher()
         {
 
             @Override
             public void eventDetected(FileInfo info) throws IOException
             {
-                logger.entering(FileSystemWatcher.class.getName(), "tailFile");
-                TailFile tailFile= TailFileFactory.createTailFile(info, Options.getBytes(), Options.getLines(), Options.fromBeginning(), Options.showFilenames());
-                tailFile.tail(System.out);
-                logger.exiting(FileSystemWatcher.class.getName(), "tailFile");
+                runTail(info);
             }
-        };
+
+        } : new FileSystemWatcher()
+        {
+
+            @Override
+            public void eventDetected(FileInfo info) throws IOException
+            {
+                runTail(info);
+            }
+        });
         for (String filename : Options.files())
         {
             logger.log(Level.FINER, "Watch filename {0}.", filename);

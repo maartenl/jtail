@@ -20,6 +20,18 @@ package com.tools.jtail;
 import java.io.IOException;
 
 /**
+ * <p>Interface for watching for changes on the file that needs to be tailed. 
+ * Is only to be used
+ * when the switch '-f' is used.</p>
+ * <img src="../../../images/Watcher.png"/>
+ *
+ * @startuml
+ * interface Watcher
+ * abstract class FileSystemWatcher
+ * abstract class PollingWatcher
+ * Watcher <|-- FileSystemWatcher
+ * Watcher <|-- PollingWatcher
+ * @enduml
  *
  * @author maartenl
  */
