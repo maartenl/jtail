@@ -68,7 +68,7 @@ public abstract class FileSystemWatcher implements Watcher
     private final Set<Path> directories = new HashSet<>();
 
     /**
-     * Files to trail.
+     * Files to tail.
      */
     private final Set<FileInfo> files = new HashSet<>();
 

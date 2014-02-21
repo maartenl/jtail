@@ -37,20 +37,9 @@ public abstract class PollingWatcher implements Watcher
     private static final Logger logger = Logger.getLogger(PollingWatcher.class.getName());
 
     /**
-     * Set of directories that need to be watched.
-     */
-    private final Set<Path> directories = new HashSet<>();
-
-    /**
-     * Files to trail.
+     * Files to tail.
      */
     private final Set<FileInfo> files = new HashSet<>();
-
-    @SuppressWarnings("unchecked")
-    private static <T> WatchEvent<T> cast(WatchEvent<?> event)
-    {
-        return (WatchEvent<T>) event;
-    }
 
     @Override
     public void watch(String filename)
@@ -60,7 +49,6 @@ public abstract class PollingWatcher implements Watcher
 
         FileInfo fileInfo = new FileInfo(filename);
         files.add(fileInfo);
-        directories.add(fileInfo.getDirectory());
         logger.exiting(PollingWatcher.class.getName(), "watch");
     }
 
