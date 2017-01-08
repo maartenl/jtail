@@ -27,6 +27,6 @@ import java.io.PrintStream;
 public interface TailFile
 {
 
-    public void tail(PrintStream out) throws FileNotFoundException, IOException;
+    void tail(PrintStream out) throws FileNotFoundException, IOException;
 
 }

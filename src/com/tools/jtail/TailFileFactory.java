@@ -16,20 +16,23 @@
  */
 package com.tools.jtail;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.RandomAccessFile;
-import java.util.LinkedList;
-import java.util.List;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.ArrayDeque;
+import java.util.EnumSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static java.nio.file.StandardOpenOption.READ;
 
 /**
  * Creates TailFile implementations depending on the requirements.
  * <img src="../../../images/TailFileFactory.png"/>
+ * <br/>
+ * Uses non-blocking java nio InputStream/ByteChannels (i.e. file can be deleted while opened here).
  *
  * @author maartenl
  *
@@ -97,7 +100,8 @@ public class TailFileFactory
     {
 
         private final FileInfo info;
-
+        private static final String encoding = System.getProperty("file.encoding");
+        private static final Charset charset = Charset.forName(encoding);
         private final boolean showFilenames;
 
         private TailFileBytes(FileInfo info, boolean showFilenames)
@@ -113,21 +117,26 @@ public class TailFileFactory
             {
                 out.println("==> " + info.getFilename() + " <==");
             }
-            byte[] buffer = new byte[BUFFER_SIZE];
+            // We use a ByteBuffer to read (BUFER_SIZE)
+            ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+            // Position is set to 0
+            buffer.clear();
             if (info.getPosition() > info.getSize())
             {
                 out.println("jtail: " + info.getFilename() + ": file truncated");
                 info.setPosition(0);
             }
-            try (RandomAccessFile reader = new RandomAccessFile(info.getFile().toFile(), "r");)
-            {
-                reader.seek(info.getPosition());
-                while ((reader.read(buffer))
-                        != -1)
-                {
-                    out.print(new String(buffer));
+            try (SeekableByteChannel reader = Files.newByteChannel(info.getFile(), EnumSet.of(READ))) {
+                reader.position(info.getPosition());
+                // While the number of bytes from the channel are > 0
+                while(reader.read(buffer)>0) {
+                    // after reading into the buffer we have to flip it in order to write it to out.
+                    buffer.flip();
+                    out.print(charset.decode(buffer));
+                    // Prepare the buffer for a new read
+                    buffer.clear();
                 }
-                info.setPosition(reader.getFilePointer());
+                info.setPosition(reader.position());
             }
         }
     }
@@ -157,7 +166,7 @@ public class TailFileFactory
             }
             int currentLine = 0;
             boolean found = false;
-            try (BufferedReader reader = new BufferedReader(new FileReader(info.getFile().toFile())))
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(info.getFile()))))
             {
                 String lineRead;
                 while ((lineRead = reader.readLine()) != null)
@@ -185,7 +194,8 @@ public class TailFileFactory
         private final FileInfo info;
 
         private final boolean showFilenames;
-
+        private static final String encoding = System.getProperty("file.encoding");
+        private static final Charset charset = Charset.forName(encoding);
         private long lines;
 
         private TailFileLinesFromEnd(FileInfo info, long lines, boolean showFilenames)
@@ -196,64 +206,50 @@ public class TailFileFactory
         }
 
         @Override
-        public void tail(PrintStream out) throws FileNotFoundException, IOException
-        {
-            if (showFilenames)
-            {
+        public void tail(PrintStream out) throws FileNotFoundException, IOException {
+            if (showFilenames) {
                 out.println("==> " + info.getFilename() + " <==");
             }
+            // We use a ByteBuffer to read (BUFFER_SIZE)
+            ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+            // Position is set to 0
+            buffer.clear();
             int linesRead = 0;
-            byte[] buffer = new byte[BUFFER_SIZE];
-            List<String> totalRead = new LinkedList<>();
-            if (info.getPosition() > info.getSize())
-            {
+            ArrayDeque<String> totalRead = new ArrayDeque<>();
+            if (info.getPosition() > info.getSize()) {
                 out.println("jtail: " + info.getFilename() + ": file truncated");
                 info.setPosition(0);
             }
-            info.setPosition(info.getSize() - BUFFER_SIZE);
-            try (RandomAccessFile reader = new RandomAccessFile(info.getFile().toFile(), "r");)
+            info.setPosition(Math.max(info.getSize() - BUFFER_SIZE, 0));
+            try (SeekableByteChannel reader = Files.newByteChannel(info.getFile(), EnumSet.of(READ)))
             {
                 do
                 {
-                    reader.seek(info.getPosition());
+                    reader.position(info.getPosition());
                     reader.read(buffer);
-                    String s = new String(buffer);
+                    buffer.flip();
+                    String s = charset.decode(buffer).toString();
+                    buffer.clear();
                     String[] split = s.split("\n");
                     logger.log(Level.FINEST, "split: {0}...{1}:{2}", new Object[]
                     {
                         split[0], split.length, split[split.length - 1]
                     });
-                    if (totalRead.isEmpty())
+                    linesRead += split.length;
+                    for (int i = split.length-1; i >= 0 && totalRead.size() < lines; i--)
                     {
-                        linesRead += split.length;
-                        for (int i = 0; i < split.length; i++)
-                        {
-                            totalRead.add(i, split[i]);
-                        }
-                    } else
-                    {
-                        totalRead.set(0, split[split.length - 1] + totalRead.get(0));
-                        for (int i = 0; i < split.length - 1; i++)
-                        {
-                            totalRead.add(i, split[i]);
-                        }
+                        totalRead.addFirst(split[i]);
                     }
                     if (linesRead > lines)
                     {
                         break;
                     }
                     info.setPosition(info.getPosition() - BUFFER_SIZE);
-                } while (info.getPosition() != 0);
-                // info.setPosition(reader.getFilePointer());
+                } while (info.getPosition() > 0);
 
                 // write it to the output
-                for (long i = lines - 1; i >= 0; i--)
-                {
-                    if (i <= totalRead.size() - 1)
-                    {
-                        out.println(totalRead.get((int) (totalRead.size() - 1 - i)));
-                    }
-                }
+                totalRead.forEach(out::println);
+                // set the position to the end of the file
                 info.setPosition(info.getSize());
             }
         }
