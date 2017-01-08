@@ -34,10 +34,10 @@ import java.io.IOException;
 public interface Watcher
 {
 
-    public void eventDetected(FileInfo info) throws IOException;
+    void eventDetected(FileInfo info) throws IOException;
 
-    public void startWatching() throws IOException;
+    void startWatching() throws IOException;
 
-    public void watch(FileInfo fileInfo) throws IOException;
+    void watch(FileInfo fileInfo) throws IOException;
 
 }
